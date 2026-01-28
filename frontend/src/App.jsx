@@ -1,21 +1,14 @@
-import { useEffect, useState } from "react";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
 
-function App() {
-  const [status, setStatus] = useState("Loading...");
-
-  useEffect(() => {
-    fetch(import.meta.env.VITE_API_URL + "/api/health")
-      .then(res => res.json())
-      .then(data => setStatus(data.status))
-      .catch(() => setStatus("Backend not reachable"));
-  }, []);
-
+export default function App() {
   return (
-    <div style={{ padding: "40px" }}>
-      <h1>SmartAI Campus Management</h1>
-      <p>{status}</p>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
-
-export default App;
