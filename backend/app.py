@@ -21,7 +21,9 @@ def create_app():
     @app.route("/api/health")
     def health():
         return {"status": "Backend running"}
-
+    # Inside create_app() in app.py, before 'return app'
+with app.app_context():
+    db.create_all()
     return app
 
 app = create_app()
