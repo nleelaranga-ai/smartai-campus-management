@@ -1,13 +1,30 @@
-from flask import Flask, jsonify
+from flask import Flask
 from flask_cors import CORS
+from flask_sqlalchemy import SQLAlchemy
+from flask_jwt_extended import JWTManager
+from config import Config
 
-app = Flask(__name__)
-CORS(app)
+db = SQLAlchemy()
+jwt = JWTManager()
 
-@app.route("/api/health", methods=["GET"])
-def health():
-    return jsonify({"status": "Backend running"}), 200
+def create_app():
+    app = Flask(__name__)
+    app.config.from_object(Config)
+
+    CORS(app)
+    db.init_app(app)
+    jwt.init_app(app)
+
+    from app.routes.auth_routes import auth_bp
+    app.register_blueprint(auth_bp, url_prefix="/api/auth")
+
+    @app.route("/api/health")
+    def health():
+        return {"status": "Backend running"}
+
+    return app
+
+app = create_app()
 
 if __name__ == "__main__":
     app.run(debug=True)
-
