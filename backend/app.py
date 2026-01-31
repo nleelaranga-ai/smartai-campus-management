@@ -1,11 +1,7 @@
 from flask import Flask
 from flask_cors import CORS
-from flask_sqlalchemy import SQLAlchemy
-from flask_jwt_extended import JWTManager
+from app import db, jwt
 from config import Config
-
-db = SQLAlchemy()
-jwt = JWTManager()
 
 def create_app():
     app = Flask(__name__)
@@ -15,16 +11,12 @@ def create_app():
     db.init_app(app)
     jwt.init_app(app)
 
+    # Blueprint Registration
     from app.routes.auth_routes import auth_bp
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
 
-    @app.route("/api/health")
-    def health():
-        return {"status": "Backend running"}
-
-    # Corrected indentation: This must be inside create_app
     with app.app_context():
-        db.create_all() 
+        db.create_all()
 
     return app
 
