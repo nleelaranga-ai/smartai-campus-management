@@ -1,30 +1,20 @@
-from flask import Blueprint, request, jsonify
-from flask_jwt_extended import create_access_token
-from app.models.user import User
-from app import db
+from functools import wraps
+from flask_jwt_extended import get_jwt_data
 
-auth_bp = Blueprint("auth", __name__)
+def role_required(required_role):
+    def wrapper(fn):
+        @wraps(fn)
+        def decorator(*args, **kwargs):
+            claims = get_jwt_data()
+            if claims.get('role') != required_role:
+                return {"msg": "Access forbidden: Insufficient permissions"}, 403
+            return fn(*args, **kwargs)
+        return decorator
+    return wrapper
 
-@auth_bp.route("/register", methods=["POST"])
-def register():
-    data = request.json
-    user = User(
-        name=data["name"],
-        email=data["email"],
-        role=data.get("role", "student")
-    )
-    user.set_password(data["password"])
-    db.session.add(user)
-    db.session.commit()
-    return jsonify({"msg": "User registered"}), 201
-
-@auth_bp.route("/login", methods=["POST"])
-def login():
-    data = request.json
-    user = User.query.filter_by(email=data["email"]).first()
-
-    if not user or not user.check_password(data["password"]):
-        return jsonify({"msg": "Invalid credentials"}), 401
-
-    token = create_access_token(identity=user.id)
-    return jsonify({"access_token": token, "role": user.role})
+# Example of an advanced Admin-only route
+@auth_bp.route('/admin/system-health', methods=['GET'])
+@jwt_required()
+@role_required('admin')
+def get_system_health():
+    return {"status": "Database Connected", "load": "Low"}
