@@ -1,20 +1,17 @@
-import { GoogleGenerativeAI } from "@google/genai";
+// frontend/src/services/geminiService.ts
+export const getSmartAIResponse = async (userPrompt: string, studentId: string) => {
+  // Fetch real-time risk data from your new SQL View
+  const riskRes = await fetch(`${import.meta.env.VITE_API_URL}/api/analytics/risk/${studentId}`);
+  const riskData = await riskRes.json(); 
 
-const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
-
-export const getSmartAIResponse = async (userPrompt: string, studentStats: any) => {
   const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
   
-  // Injecting real campus data into the AI's "brain"
-  const campusContext = `
-    You are the SmartAI Buddy. You are helping a student with the following stats:
-    - Current Attendance: ${studentStats.attendance}%
-    - Average Grade: ${studentStats.avgGrade}%
-    - At Risk subjects: ${studentStats.atRiskSubjects.join(', ') || 'None'}.
-    If attendance is below 75%, warn them professionally. Suggest study plans based on their grades.
+  const systemPrompt = `
+    You are the SmartAI Buddy. The student has an attendance of ${riskData.attendance_percentage}%.
+    Their current risk status is: ${riskData.risk_status}.
+    Provide a specific recovery plan if they are 'High' risk.
   `;
 
-  const result = await model.generateContent([campusContext, userPrompt]);
-  const response = await result.response;
-  return response.text();
+  const result = await model.generateContent([systemPrompt, userPrompt]);
+  return result.response.text();
 };
