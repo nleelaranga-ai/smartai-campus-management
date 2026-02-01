@@ -1,4 +1,5 @@
 from app import db
+from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 
 class User(db.Model):
@@ -6,7 +7,9 @@ class User(db.Model):
     name = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(200), nullable=False)
-    role = db.Column(db.String(20), default="student")
+    role = db.Column(db.String(20), default="student") # student, faculty, admin
+    status = db.Column(db.String(20), default="active")
+    last_login = db.Column(db.DateTime, default=datetime.utcnow)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
