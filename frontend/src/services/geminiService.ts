@@ -1,17 +1,26 @@
-// frontend/src/services/geminiService.ts
-export const getSmartAIResponse = async (userPrompt: string, studentId: string) => {
-  // Fetch real-time risk data from your new SQL View
-  const riskRes = await fetch(`${import.meta.env.VITE_API_URL}/api/analytics/risk/${studentId}`);
-  const riskData = await riskRes.json(); 
+import { GoogleGenerativeAI } from "@google/genai";
+
+const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
+
+export const getSmartAIBuddyResponse = async (userPrompt: string, studentId: number) => {
+  // Fetch real risk data from the SQL View via your Render Backend
+  const response = await fetch(`${import.meta.env.VITE_API_URL}/api/analytics/risk/${studentId}`, {
+    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+  });
+  const riskData = await response.json();
 
   const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
   
-  const systemPrompt = `
-    You are the SmartAI Buddy. The student has an attendance of ${riskData.attendance_percentage}%.
-    Their current risk status is: ${riskData.risk_status}.
-    Provide a specific recovery plan if they are 'High' risk.
+  const systemInstruction = `
+    You are the SmartAI Buddy for SmartAI Campus Management.
+    Current Student Context:
+    - Attendance: ${riskData.attendance_percentage}%
+    - Risk Level: ${riskData.risk_status}
+    
+    If risk is 'High', your tone should be supportive but urgent. 
+    If risk is 'Low', be encouraging and suggest advanced topics for them to study.
   `;
 
-  const result = await model.generateContent([systemPrompt, userPrompt]);
+  const result = await model.generateContent([systemInstruction, userPrompt]);
   return result.response.text();
 };
